@@ -1,3 +1,4 @@
+const { verifyToken } = require("./verifyToken");
 const router = require("express").Router();
 
 module.exports = router;
@@ -12,3 +13,8 @@ module.exports = router;
 // })
 
 
+router.put("/:id", verifyToken, (req, res) => {
+  if(req.user.id === req.params.id || is)
+})
+
+module.exports = router;
