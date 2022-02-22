@@ -7,6 +7,11 @@ const authRoute = require("./routes/auth");
 
 dotenv.config();
 
+// Get User
+// app.get("/api/test", (req, res, next) => {
+//   console.log("user test is successful");
+// });
+
 mongoose
 .connect(process.env.MONGO_URL)
 .then(() => console.log("DBconnection Success"))
