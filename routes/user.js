@@ -7,20 +7,18 @@ const {
 
 const router = require("express").Router();
 
-
-module.exports = router;
 // Get User
 // router.get("/usertest", (req, res, next) => {
 //   res.send("user test is successful");
 // });
 
-router.post("/userposttest", (req, res, next) => {
-  const username = req.body.username;
-  res.send("your name is: " + username);
-})
+// router.post("/userposttest", (req, res, next) => {
+//   const username = req.body.username;
+//   res.send("your name is: " + username);
+// })
 
 // UPDATE
-router.put("/:id", verifyToken, (req, res) => {
+router.put("/:id", verifyTokenAndAuthorization, async (req, res) => {
   if(req.body.password) {
    req.body.password = CryptoJS.AES.encrypt(
      req.body.password,
@@ -29,12 +27,12 @@ router.put("/:id", verifyToken, (req, res) => {
   }
 
     try {
-      const updatedUser = await.findByIdAndUpdate(
+      const updatedUser = await User.findByIdAndUpdate(
         req.params.id, 
       {
         $set: req.body,
       },
-      { new:true }
+      { new: true }
       );
       res.status(200).json(updatedUser);
     } catch (err) {
@@ -63,5 +61,46 @@ router.get("/find/:id", verifyTokenAndAdmin, async (req, res) => {
     res.status(500).json(err)
   }
 })
+
+// GET ALL USERS
+router.get("/", verifyTokenAndAdmin, async (req, res) => {
+  const query = req.query.new;
+  try {
+    const users = query 
+      ? await User.find().sort({ _id: -1 }).limit(1) 
+      : await User.find();  
+    res.status(200).json(user);
+  } catch (err) {
+    res.status(500).json(err)
+  }
+});
+
+// GET USER STATS 
+
+router.get("/stats", verifyTokenAndAdmin, async (req, res) => {
+  const date = new Date();
+  const lastYear = new Date(date.setFullYear(date.getFullYear() - 1));
+
+  try {
+
+    const data = await User.aggregate([
+      {$match: {createdAt: { $gte: lastYear }}},
+      {
+        $project: {
+          month: { $month: "$createdAt"},
+        },
+      },  
+      {
+        $group: {
+          _id: "$month",
+          total: { $sum: 1 },
+        }
+      }
+    ]);
+    res.status(200).json(data)
+  } catch(Err){
+    res.status(500).json(err);
+  }
+});
 
 module.exports = router;
